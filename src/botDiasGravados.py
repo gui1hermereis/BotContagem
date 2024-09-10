@@ -8,9 +8,11 @@ import time
 import cv2
 import os
 
+# Configurando o caminho para o executável do Tesseract e os dados de idiomas
 pytesseract.pytesseract.tesseract_cmd = r'C:/Program Files/Tesseract-OCR/tesseract.exe'
 os.environ['TESSDATA_PREFIX'] = r'C:/Program Files/Tesseract-OCR/tessdata/'
 
+# Função para executar comandos de automação, como clicar, mover, escrever, etc.
 def execute_command(command):
     action, *params = command
     if action == "click":
@@ -56,6 +58,7 @@ def execute_command(command):
         print(f"Comando '{action}' não reconhecido.")
         return None
 
+# Função de correção de texto (pode ser expandida conforme necessário)
 def correct_text(text):
     corrections = {
     }
@@ -63,15 +66,21 @@ def correct_text(text):
         text = text.replace(wrong, correct)
     return text
 
+# Função para localizar texto na tela com OCR e fuzzy matching
 def find_text(x, y, width, height, search_texts):
+    # Captura uma parte da tela
     screenshot = ImageGrab.grab(bbox=(x, y, x + width, y + height))
     screenshot_np = np.array(screenshot)
     screenshot_gray = cv2.cvtColor(screenshot_np, cv2.COLOR_RGB2GRAY)
 
+    # Usa Tesseract para extrair texto da imagem
     data = pytesseract.image_to_data(screenshot_gray, lang='eng', output_type=pytesseract.Output.DICT)
     recognized_texts = [correct_text(word).upper() for word in data['text']]
+
+    # Faz a correspondência fuzzy para encontrar o melhor ajuste
     best_match, best_score = process.extractOne(search_texts, recognized_texts)
     
+    # Se a correspondência for suficientemente boa, retorna a localização
     if best_score > 60:
         index = recognized_texts.index(best_match)
         x_offset = data['left'][index]
@@ -80,44 +89,53 @@ def find_text(x, y, width, height, search_texts):
         return True, location
     return False, None
 
-
+# Função para contar itens verdes em uma região da tela (usando HSV)
 def count_green_items(x, y, width, height):
     time.sleep(2)
     screenshot = ImageGrab.grab(bbox=(x, y, x + width, y + height))
     screenshot_np = np.array(screenshot)
     screenshot_bgr = cv2.cvtColor(screenshot_np, cv2.COLOR_RGB2BGR)
 
+    # Definir o intervalo da cor verde em HSV
     lower_green = np.array([40, 100, 50])
     upper_green = np.array([80, 255, 255])
 
+    # Converte a imagem para HSV e aplica a máscara
     hsv = cv2.cvtColor(screenshot_bgr, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, lower_green, upper_green)
 
+    # Encontra os contornos dos objetos verdes
     contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     return len(contours)
 
+# Função para contar itens baseados em um template de imagem
 def count_template_items(x, y, width, height, template_path):
     time.sleep(2)
     screenshot = ImageGrab.grab(bbox=(x, y, x + width, y + height))
     screenshot_np = np.array(screenshot)
     screenshot_bgr = cv2.cvtColor(screenshot_np, cv2.COLOR_RGB2BGR)
 
+    # Carrega o template e converte a captura de tela para escala de cinza
     template = cv2.imread(template_path, cv2.IMREAD_GRAYSCALE)
     screenshot_gray = cv2.cvtColor(screenshot_bgr, cv2.COLOR_BGR2GRAY)
 
+    # Usa correspondência de template para contar ocorrências
     result = cv2.matchTemplate(screenshot_gray, template, cv2.TM_CCOEFF_NORMED)
     threshold = 0.8
     loc = np.where(result >= threshold)
 
+    # Conta as correspondências
     count = 0
     for pt in zip(*loc[::-1]):
         count += 1
     return count
 
+# Função para esperar o desaparecimento de uma tela de carregamento
 def wait_for_loading_to_disappear(x, y, width, height, template_path, timeout=60):
     start_time = time.time()
     template = cv2.imread(template_path, cv2.IMREAD_GRAYSCALE)
     
+    # Loop até que o template desapareça ou o timeout seja atingido
     while True:
         screenshot = ImageGrab.grab(bbox=(x, y, x + width, y + height))
         screenshot_np = np.array(screenshot)
@@ -132,10 +150,11 @@ def wait_for_loading_to_disappear(x, y, width, height, template_path, timeout=60
         if time.time() - start_time > timeout:
             break
 
-        time.sleep(1) 
+        time.sleep(1)
 
 cameras = []
 
+# Lista de comandos padrão para automação
 commands_template = [
     ("move", 340, 118),
     ("click", 340, 118),
@@ -143,7 +162,7 @@ commands_template = [
     ("press", "enter"),
     ("find_text", 290, 200, 320, 250, cameras), 
     ("move", 1257, 1060),
-    ("wait_for_loading", 617, 175, 1200, 600, "C:/Users/Suporte/Desktop/Bots/loading.png"), 
+    ("wait_for_loading", 617, 175, 1200, 600, "src/assets/loading.png"), 
     ("pause", 5),
     ("click", 1257, 1060),
     ("move", 1200, 980),
@@ -152,7 +171,7 @@ commands_template = [
     ("count_green", 1150, 755, 235, 280),
     ("click", 1159, 760),
     ("count_green", 1150, 755, 235, 280),
-    ("count_template", 1150, 755, 235, 280, "C:/Users/Suporte/Desktop/Bots/imagemVermelha.png"),
+    ("count_template", 1150, 755, 235, 280, "src/assets/imagemVermelha.png"),
     ("click", 1159, 760),
     ("count_green", 1150, 755, 235, 280),
     ("move", 1809, 56),
@@ -163,16 +182,18 @@ commands_template = [
     ("press", "backspace")
 ]
 
+# Função para carregar uma lista de câmeras a partir de um arquivo Excel
 def carregar_cameras_de_excel(caminho_arquivo):
     df = pd.read_excel(caminho_arquivo, header=None)
     cameras = df[0].tolist()
     return cameras
 
+# Função principal do programa
 def main():
     print("Você tem 5 segundos para alternar para o aplicativo...")
     time.sleep(5)
 
-    caminho_arquivo_excel = r'C:/Users/Suporte/Desktop/Bots/Cameras.xlsx'
+    caminho_arquivo_excel = r'src/assets/Cameras.xlsx'
     cameras = carregar_cameras_de_excel(caminho_arquivo_excel)
     
     results = {}
@@ -180,6 +201,7 @@ def main():
 
     for camera in cameras:
         total_count = 0
+        # Atualiza comandos para cada câmera
         commands = [(cmd if cmd[0] != "find_text" else ("find_text", cmd[1], cmd[2], cmd[3], cmd[4], cameras)) for cmd in commands_template]
         commands = [(cmd if cmd[0] != "write" else ("write", camera)) for cmd in commands]
 
@@ -208,13 +230,16 @@ def main():
         if camera_found:  
             results[camera] = total_count
 
+    # Cria DataFrame para armazenar resultados
     df_results = pd.DataFrame.from_dict(results, orient='index', columns=['Dias Gravados'])
     df_results['Dias Faltando'] = 60 - df_results['Dias Gravados']
     df_results.index.name = 'Câmeras'
 
+    # Caso haja câmeras não encontradas, cria outro DataFrame
     if not_found_cameras:
         df_not_found = pd.DataFrame(not_found_cameras, columns=['Câmeras Não Encontradas'])
 
+    # Salva os resultados em arquivos Excel
     file_path_results = os.path.join(os.environ['USERPROFILE'], 'Desktop', "ContagemDias.xlsx")
     file_path_not_found = os.path.join(os.environ['USERPROFILE'], 'Desktop', "CamerasNaoEncontradas.xlsx")
 
@@ -227,5 +252,6 @@ def main():
     if not_found_cameras:
         print(f"Lista de câmeras não encontradas salva em {file_path_not_found}")
 
+# Execução principal
 if __name__ == "__main__":
     main()

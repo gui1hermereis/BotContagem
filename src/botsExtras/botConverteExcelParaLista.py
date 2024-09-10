@@ -15,9 +15,9 @@ def save_list_to_py_file(data_list, output_file):
                 file.write(f"    '{item}',\n")
         file.write(']\n')
 
-file_path = 'Cameras.xlsx'
+file_path = 'src/assets/Cameras.xlsx'
 
-output_file = 'ListaCameras.py'
+output_file = 'src/botsExtras/ListaCameras.py'
 
 data_list = excel_to_list(file_path)
 

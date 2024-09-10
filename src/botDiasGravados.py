@@ -67,8 +67,7 @@ def correct_text(text):
     return text
 
 # Função para localizar texto na tela com OCR e fuzzy matching
-def find_text(x, y, width, height, search_texts):
-    # Captura uma parte da tela
+def find_text(x, y, width, height, search_texts, save_screenshot=False):
     screenshot = ImageGrab.grab(bbox=(x, y, x + width, y + height))
     screenshot_np = np.array(screenshot)
     screenshot_gray = cv2.cvtColor(screenshot_np, cv2.COLOR_RGB2GRAY)
@@ -81,7 +80,7 @@ def find_text(x, y, width, height, search_texts):
     best_match, best_score = process.extractOne(search_texts, recognized_texts)
     
     # Se a correspondência for suficientemente boa, retorna a localização
-    if best_score > 60:
+    if best_score > 50:
         index = recognized_texts.index(best_match)
         x_offset = data['left'][index]
         y_offset = data['top'][index]
@@ -160,20 +159,20 @@ commands_template = [
     ("click", 340, 118),
     ("write", ""),
     ("press", "enter"),
-    ("find_text", 290, 200, 320, 250, cameras), 
+    ("find_text", 280, 140, 330, 450, cameras), 
     ("move", 1257, 1060),
-    ("wait_for_loading", 617, 175, 1200, 600, "src/assets/loading.png"), 
+    ("wait_for_loading", 617, 175, 1200, 700, "src/assets/loading.png"), 
     ("pause", 5),
     ("click", 1257, 1060),
     ("move", 1200, 980),
     ("click", 1200, 980),
     ("move", 1159, 760),
-    ("count_green", 1150, 755, 235, 280),
+    ("count_green", 1147, 780, 235, 210),
     ("click", 1159, 760),
-    ("count_green", 1150, 755, 235, 280),
-    ("count_template", 1150, 755, 235, 280, "src/assets/imagemVermelha.png"),
+    ("count_green", 1147, 780, 235, 210),
+    ("count_template", 1147, 780, 235, 210, "src/assets/imagemVermelha.png"),
     ("click", 1159, 760),
-    ("count_green", 1150, 755, 235, 280),
+    ("count_green", 1147, 780, 235, 210),
     ("move", 1809, 56),
     ("doubleclick", 1809, 56),
     ("move", 340, 118),

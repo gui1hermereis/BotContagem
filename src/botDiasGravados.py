@@ -165,10 +165,11 @@ commands_template = [
     ("wait_for_loading", 617, 175, 1200, 700, "src/assets/loading.png"), 
     ("pause", 5),
     ("click", 1257, 1060),
-    ("move", 1200, 980),
-    ("click", 1200, 980),
+    ("move", 1160, 840),
+    ("click", 1160, 840),
     ("move", 1159, 760),
     ("count_green", 1147, 780, 235, 210),
+    ("count_template", 1147, 780, 235, 210, "src/assets/imagemVermelha.png"),
     ("click", 1159, 760),
     ("count_green", 1147, 780, 235, 210),
     ("count_template", 1147, 780, 235, 210, "src/assets/imagemVermelha.png"),
@@ -232,7 +233,7 @@ def main():
 
     # Cria DataFrame para armazenar resultados
     df_results = pd.DataFrame.from_dict(results, orient='index', columns=['Dias Gravados'])
-    df_results['Dias Faltando'] = 60 - df_results['Dias Gravados']
+    df_results['Dias Faltando'] = (60 - df_results['Dias Gravados']).clip(lower=0)
     df_results.index.name = 'Câmeras'
 
     # Caso haja câmeras não encontradas, cria outro DataFrame

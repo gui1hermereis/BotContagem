@@ -1,4 +1,5 @@
 from fuzzywuzzy import process
+from datetime import datetime
 from PIL import ImageGrab
 import pandas as pd
 import numpy as np
@@ -238,9 +239,10 @@ def main():
     if not_found_cameras:
         df_not_found = pd.DataFrame(not_found_cameras, columns=['Câmeras Não Encontradas'])
 
-    # Salva os resultados em arquivos Excel
-    file_path_results = os.path.join(os.environ['USERPROFILE'], 'Desktop', "ContagemDias.xlsx")
-    file_path_not_found = os.path.join(os.environ['USERPROFILE'], 'Desktop', "CamerasNaoEncontradas.xlsx")
+    # Salva os resultados em arquivos Excel com a data atual da consulta
+    data_atual = datetime.now().strftime('%d-%m-%Y')
+    file_path_results = f'src/resultados/ContagemDias_{data_atual}.xlsx'
+    file_path_not_found = f'src/resultados/CamerasNaoEncontradas_{data_atual}.xlsx'
 
     df_results.to_excel(file_path_results, index=True)
 

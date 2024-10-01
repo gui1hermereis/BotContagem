@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import pytesseract
 import pyautogui
+import openpyxl
 import time
 import cv2
 import os
@@ -165,8 +166,8 @@ commands_template = [
     ("wait_for_loading", 617, 175, 1200, 700, "src/assets/loading.png"), 
     ("pause", 5),
     ("click", 1257, 1060),
-    ("move", 1160, 840),
-    ("click", 1160, 840),
+    ("move", 1232, 816),
+    ("click", 1232, 816),
     ("move", 1159, 760),
     ("count_green", 1147, 780, 235, 210),
     ("count_template", 1147, 780, 235, 210, "src/assets/imagemVermelha.png"),
@@ -257,6 +258,54 @@ def main():
     print(f"Resultados das câmeras encontradas salvos em {file_path_results}")
     if not_found_cameras:
         print(f"Lista de câmeras não encontradas salva em {file_path_not_found}")
+
+    # Adiciona fórmulas usando openpyxl
+    df = pd.read_excel(file_path_results, usecols="B")  
+    df.columns = ['Dias Gravados']  
+
+    valores_maiores_que_60 = df[df['Dias Gravados'] >= 60]
+    contagemMaiorIgual60 = valores_maiores_que_60.shape[0]
+
+    valores_maiores_que_50_menores_que_60 = df[(df['Dias Gravados'] >= 50) & (df['Dias Gravados'] < 60)]
+    contagemMaiorIgual50Menor60 = valores_maiores_que_50_menores_que_60.shape[0]
+
+    valores_maiores_que_40_menores_que_50 = df[(df['Dias Gravados'] >= 40) & (df['Dias Gravados'] < 50)]
+    contagemMaiorIgual40Menor50 = valores_maiores_que_40_menores_que_50.shape[0]
+
+    valores_maiores_que_30_menores_que_40 = df[(df['Dias Gravados'] >= 30) & (df['Dias Gravados'] < 40)]
+    contagemMaiorIgual30Menor40 = valores_maiores_que_30_menores_que_40.shape[0]
+
+    valores_maiores_que_20_menores_que_30 = df[(df['Dias Gravados'] >= 20) & (df['Dias Gravados'] < 30)]
+    contagemMaiorIgual20Menor30 = valores_maiores_que_20_menores_que_30.shape[0]
+
+    valores_maiores_que_10_menores_que_20 = df[(df['Dias Gravados'] >= 10) & (df['Dias Gravados'] < 20)]
+    contagemMaiorIgual10Menor20 = valores_maiores_que_10_menores_que_20.shape[0]
+
+    valores_menores_que_10 = df[df['Dias Gravados'] < 10]
+    contagemMenor10 = valores_menores_que_10.shape[0]
+
+    wb = openpyxl.load_workbook(file_path_results)
+    ws = wb.active
+
+    # Adicionar legendas
+    ws['L9'] = '> = 60'
+    ws['L10'] = '>= 50 E < 60'
+    ws['L11'] = '>= 40 E < 50'
+    ws['L12'] = '>= 30 E < 40'
+    ws['L13'] = '>= 20 E < 30'
+    ws['L14'] = '>= 10 E < 20'
+    ws['L15'] = '< 10'
+
+    # Adicionar fórmulas
+    ws['M9'] = contagemMaiorIgual60
+    ws['M10'] = contagemMaiorIgual50Menor60
+    ws['M11'] = contagemMaiorIgual40Menor50
+    ws['M12'] = contagemMaiorIgual30Menor40
+    ws['M13'] = contagemMaiorIgual20Menor30
+    ws['M14'] = contagemMaiorIgual10Menor20
+    ws['M15'] = contagemMenor10
+
+    wb.save(file_path_results)
 
 # Execução principal
 if __name__ == "__main__":

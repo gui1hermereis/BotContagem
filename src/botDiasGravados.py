@@ -167,15 +167,8 @@ commands_template = [
     ("wait_for_loading", 617, 175, 1200, 700, "src/assets/loading.png"), 
     ("pause", 5),
     ("click", 1257, 1060),
-
-    # DEZEMBRO 
-    # ("click", 1160, 848)  
-    # ("move", 1160, 848)
-
-    # NOVEMBRO  
-    ("move", 1330, 816),
-    ("click", 1330, 816),
-    
+    ("click", 1160, 848), 
+    ("move", 1160, 848),
     ("move", 1159, 760),
     ("count_green", 1147, 780, 235, 210),
     ("count_template", 1147, 780, 235, 210, "src/assets/imagemVermelha.png"),
